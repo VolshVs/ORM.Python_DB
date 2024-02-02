@@ -13,7 +13,7 @@ class Publisher(Base):
     name = sq.Column(sq.String(length=40), unique=True, nullable=False)
 
     def __str__(self):
-        return f'Название издательства: {self.name} с id: {self.id}'
+        return f'{self.name}'
 
 
 class Book(Base):
@@ -36,7 +36,7 @@ class Shop(Base):
     name = sq.Column(sq.String(length=40), unique=True, nullable=False)
 
     def __str__(self):
-        return f'Shop: id: {self.id}, name: {self.name}'
+        return f'{self.name}'
 
 
 class Stock(Base):

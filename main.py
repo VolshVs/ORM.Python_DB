@@ -1,5 +1,3 @@
-from time import sleep
-
 import sqlalchemy as sq
 from sqlalchemy.orm import sessionmaker
 import json
@@ -67,72 +65,35 @@ for mod in data:
     session.close()
 
 
-class FindPublisher:
-    '''Класс по работе с БД.'''
-
-    data_dict = {
-        1: 'O’Reilly',
-        2: 'No starch press',
-        3: 'Microsoft Press',
-        4: 'Pearson'
-    }
-
-    def find(number: int):
-        '''Функция ищет данные из БД по издательству.'''
-        publisher_ = FindPublisher.data_dict[number]
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        result_ = session.query(
-            Publisher,
-            Book,
-            Stock,
-            Sale,
-            Shop
-        ).join(
-            Book,
-            Publisher.id == Book.id_publisher
-        ).join(
-            Stock,
-            Book.id == Stock.id_book
-        ).join(
-            Sale,
-            Stock.id == Sale.id_stock
-        ).join(
-            Shop,
-            Stock.id_shop == Shop.id
-        ).filter(Publisher.name == publisher_)
-        for publisher, book, stok, sale, shop in result_:
-            print(
-                f'{publisher.name} | Название книги: {book.title} '
-                f'| название магазина: {shop.name} '
-                f'| стоимость покупки: {sale.price} '
-                f'| дата покупки: {sale.date_sale}'
-            )
-        session.close()
-
-    def check(number: str) -> int:
-        '''Функция проверяет правильность введения заданных значений.'''
-        try:
-            a = str(number)
-            b = int(a)
-        except (TypeError, ValueError):
-            return print('Вы вышли за заданные рамки!')
-        else:
-            if 1 <= b <= 4:
-                print("Запускаем процесс!\n")
-                sleep(1)
-                return FindPublisher.find(b)
-            else:
-                return print('Вы вышли за заданные рамки!')
+def get_shops(user_input):
+    Session = sessionmaker(bind=engine)
+    dbsession = Session()
+    session_body = dbsession.query(
+        Book.title,
+        Shop.name,
+        Sale.price,
+        Sale.date_sale
+    ).select_from(
+        Shop
+    ).join(
+        Stock, Stock.id_shop == Shop.id
+    ).join(
+        Book, Book.id == Stock.id_book
+    ).join(
+        Publisher, Publisher.id == Book.id_publisher
+    ).join(
+        Sale, Sale.id_stock == Stock.id
+    )
+    if user_input.isdigit():
+        result_ = session_body.filter(Publisher.id == user_input).all()
+    else:
+        result_ = session_body.filter(Publisher.name == user_input).all()
+    for title_, shop_name_, price_, date_sale_ in result_:
+        print(
+            f"{title_: <40} | {shop_name_: <10} | {price_: <8} | {date_sale_.strftime('%d-%m-%Y')}")
+    session.close()
 
 
 if __name__ == '__main__':
-    print('\nХотите найти нужное издательство?\n'
-          'Введите число от 1 до 4, где:\n'
-          '1 - O’Reilly;\n'
-          '2 - No starch press;\n'
-          '3 - Microsoft Press;\n'
-          '4 - Pearson.\n'
-          '')
-    number = input('-> ')
-    FindPublisher.check(number)
+    user_input = input("Введите имя или айди публициста: ")
+    get_shops(user_input)
